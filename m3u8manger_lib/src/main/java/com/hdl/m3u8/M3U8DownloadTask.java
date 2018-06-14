@@ -264,58 +264,70 @@ public class M3U8DownloadTask {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    File file = new File(dir + File.separator + m3U8Ts.getFile());
-                    if (!file.exists()) {//下载过的就不管了
-                        FileOutputStream fos = null;
-                        InputStream inputStream = null;
-                        try {
-                            URL url = new URL(basePath + m3U8Ts.getFile());
-                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                            conn.setConnectTimeout(connTimeout);
-                            conn.setReadTimeout(readTimeout);
-                            if (conn.getResponseCode() == 200) {
-                                inputStream = conn.getInputStream();
-                                fos = new FileOutputStream(file);//会自动创建文件
-                                int len = 0;
-                                byte[] buf = new byte[8 * 1024 * 1024];
-                                while ((len = inputStream.read(buf)) != -1) {
-                                    curLenght += len;
-                                    fos.write(buf, 0, len);//写入流中
-                                }
-//                                Log.e("hdltag", "run(M3U8DownloadTask.java:188):进度\t" + totalTs + "-----" + curTs);
-                            } else {
-                                handlerError(new Throwable(String.valueOf(conn.getResponseCode())));
-                            }
-                        } catch (MalformedURLException e) {
-//                            e.printStackTrace();
-                            handlerError(e);
-                        } catch (IOException e) {
-//                            e.printStackTrace();
-                            handlerError(e);
-                        } finally {//关流
-                            if (inputStream != null) {
-                                try {
-                                    inputStream.close();
-                                } catch (IOException e) {
-//                                    e.printStackTrace();
-                                }
-                            }
-                            if (fos != null) {
-                                try {
-                                    fos.close();
-                                } catch (IOException e) {
-//                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        curTs++;
-                        if (curTs == 3) {
-                            itemFileSize = file.length();
-                        }
-                        mHandler.sendEmptyMessage(WHAT_ON_PROGRESS);
-                    }
+                    dowonloadTs(basePath,dir,m3U8Ts);
+
                 }
             });
+        }
+    }
+
+    private synchronized void dowonloadTs(String basePath,File dir, M3U8Ts m3U8Ts) {
+        File file = new File(dir + File.separator + m3U8Ts.getFile());
+        if (!file.exists()) {//下载过的就不管了
+            FileOutputStream fos = null;
+            InputStream inputStream = null;
+            try {
+                URL url = new URL(basePath + m3U8Ts.getFile());
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(connTimeout);
+                conn.setReadTimeout(readTimeout);
+                if (conn.getResponseCode() == 200) {
+                    inputStream = conn.getInputStream();
+                    if (!file.getParentFile().exists()) {
+                        // 分两次mkdirs，是为了避免目录层级过高导致目录创建失败的情况
+                        file.getParentFile().mkdirs();
+                    }
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    fos = new FileOutputStream(file);//会自动创建文件
+                    int len = 0;
+                    byte[] buf = new byte[8 * 1024 * 1024];
+                    while ((len = inputStream.read(buf)) != -1) {
+                        curLenght += len;
+                        fos.write(buf, 0, len);//写入流中
+                    }
+//                                Log.e("hdltag", "run(M3U8DownloadTask.java:188):进度\t" + totalTs + "-----" + curTs);
+                } else {
+                    handlerError(new Throwable(String.valueOf(conn.getResponseCode())));
+                }
+            } catch (MalformedURLException e) {
+//                            e.printStackTrace();
+                handlerError(e);
+            } catch (IOException e) {
+//                            e.printStackTrace();
+                handlerError(e);
+            } finally {//关流
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+//                                    e.printStackTrace();
+                    }
+                }
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException e) {
+//                                    e.printStackTrace();
+                    }
+                }
+            }
+            curTs++;
+            if (curTs == 3) {
+                itemFileSize = file.length();
+            }
+            mHandler.sendEmptyMessage(WHAT_ON_PROGRESS);
         }
     }
 
