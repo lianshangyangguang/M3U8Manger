@@ -247,6 +247,7 @@ public class M3U8DownloadTask {
             MUtils.clearDir(dir);
         }*/
         totalTs = m3U8.getTsList().size();
+        curTs = 0;
         if (executor != null && executor.isTerminated()) {
             executor.shutdownNow();
             executor = null;
@@ -261,13 +262,16 @@ public class M3U8DownloadTask {
             }
         }, 0, 1000);
         for (final M3U8Ts m3U8Ts : m3U8.getTsList()) {//循环下载
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    dowonloadTs(basePath,dir,m3U8Ts);
+            if(!executor.isShutdown()){
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dowonloadTs(basePath,dir,m3U8Ts);
 
-                }
-            });
+                    }
+                });
+            }
+
         }
     }
 
