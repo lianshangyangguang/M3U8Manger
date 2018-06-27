@@ -64,9 +64,9 @@ public class M3U8DownloadTask {
      */
     private String taskId = "0";
     /**
-     * 线程池最大线程数，默认为3
+     * 线程池最大线程数，默认为5
      */
-    private int threadCount = 3;
+    private int threadCount = 5;
     /**
      * 时候清楚临时目录，默认清除
      */
@@ -263,13 +263,18 @@ public class M3U8DownloadTask {
         }, 0, 1000);
         for (final M3U8Ts m3U8Ts : m3U8.getTsList()) {//循环下载
             if(!executor.isShutdown()){
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        dowonloadTs(basePath,dir,m3U8Ts);
+                try{
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            dowonloadTs(basePath,dir,m3U8Ts);
 
-                    }
-                });
+                        }
+                    });
+                }catch (Exception e){
+
+                }
+
             }
 
         }
