@@ -301,7 +301,7 @@ public class M3U8DownloadTask {
                     }
                     fos = new FileOutputStream(file);//会自动创建文件
                     int len = 0;
-                    byte[] buf = new byte[8 * 1024 * 1024];
+                    byte[] buf = new byte[8 * 1024];
                     while ((len = inputStream.read(buf)) != -1) {
                         curLenght += len;
                         fos.write(buf, 0, len);//写入流中
